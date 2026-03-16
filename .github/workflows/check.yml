@@ -27,7 +27,7 @@ jobs:
         env:
           CONFIG_YAML: ${{ secrets.CONFIG_YAML }}
       - name: Check stock
-        run: python stock_sentinel.py check
+        run: python stock_sentinel.py check --quiet
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

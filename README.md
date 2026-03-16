@@ -1,21 +1,19 @@
 # StockSentinel
 
-Утилита для автоматической проверки наличия товаров в интернет-магазинах и отправки уведомлений при появлении товара в наличии.
+Utility to monitor product availability on e-commerce sites and get notified when items come back in stock.
 
-## Запуск
+## Run
 
 ```bash
-# Установите зависимости
 pip install -r requirements.txt
 
-# Запуск
 python stock_sentinel.py check
 python stock_sentinel.py list
 ```
 
-## Конфигурация
+## Configuration
 
-Локально: скопируйте `config.example.yaml` в `config.yaml` (файл в `.gitignore`). Добавьте товары и настройте Telegram:
+**Local:** Copy `config.example.yaml` to `config.yaml` (the file is in `.gitignore`). Add products and configure Telegram:
 
 ```yaml
 products:
@@ -32,48 +30,46 @@ notifications:
     chat_id: ${TELEGRAM_CHAT_ID}
 ```
 
-3. Токены Telegram — один из способов:
-   - **Переменные окружения:** `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID`
-   - **Файл secrets.yaml:** скопируйте `secrets.example.yaml` в `secrets.yaml`, заполните и добавьте в `.gitignore`
+**Telegram credentials** — use either:
+- **Environment variables:** `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID`
+- **File `secrets.yaml`:** copy `secrets.example.yaml` to `secrets.yaml`, fill in values (keep `secrets.yaml` in `.gitignore`)
 
-## CLI команды
+## CLI
 
-| Команда | Описание |
-|---------|----------|
-| `python stock_sentinel.py check` | Однократная проверка всех товаров |
-| `python stock_sentinel.py list` | Список товаров и их статусов |
-| `python stock_sentinel.py add NAME URL` | Добавить товар |
-| `python stock_sentinel.py remove NAME` | Удалить товар |
+| Command | Description |
+|---------|-------------|
+| `python stock_sentinel.py check` | One-off check of all products |
+| `python stock_sentinel.py list` | List products and last status |
+| `python stock_sentinel.py add NAME URL` | Add a product |
+| `python stock_sentinel.py remove NAME` | Remove a product |
+| `python stock_sentinel.py test-notify` | Send a test Telegram message |
 
-### Примеры
+Use `--quiet` (or `-q`) to log only warnings and errors (e.g. in GitHub Actions).
+
+### Examples
 
 ```bash
-# Проверка
 python stock_sentinel.py check
-
-# Добавление товара
-python stock_sentinel.py add "RTX 4090" "https://shop.com/rtx4090" -t "Нет в наличии"
-
-# Список
+python stock_sentinel.py add "RTX 4090" "https://shop.com/rtx4090" -t "Out of stock"
 python stock_sentinel.py list
 ```
 
-## Правила проверки
+## Check rules
 
-- **text_not_contains** — товар в наличии, если на странице НЕТ указанного текста (например, "Out of stock")
-- **text_contains** — товар в наличии, если на странице ЕСТЬ указанный текст
+- **text_not_contains** — in stock when the given text is NOT on the page (e.g. "Out of stock")
+- **text_contains** — in stock when the given text IS on the page
 
 ## GitHub Actions
 
-В репозитории нужны секреты (Settings → Secrets and variables → Actions):
+Add these repository secrets (Settings → Secrets and variables → Actions):
 
-| Секрет | Описание |
-|--------|----------|
-| `TELEGRAM_TOKEN` | Токен бота Telegram |
-| `TELEGRAM_CHAT_ID` | ID чата для уведомлений |
-| `CONFIG_YAML` | Полное содержимое `config.yaml` (YAML одной строкой или с переносами) |
+| Secret | Description |
+|--------|-------------|
+| `TELEGRAM_TOKEN` | Telegram bot token |
+| `TELEGRAM_CHAT_ID` | Chat ID for notifications |
+| `CONFIG_YAML` | Full contents of your `config.yaml` (multiline OK) |
 
-При первом запуске workflow создаёт `config.yaml` из `CONFIG_YAML`; дальше конфиг и состояние хранятся в кэше Actions между запусками.
+On first run the workflow creates `config.yaml` from `CONFIG_YAML`; afterwards config and state are stored in the Actions cache between runs.
 
 ```yaml
 name: Stock Check
@@ -105,15 +101,24 @@ jobs:
         env:
           CONFIG_YAML: ${{ secrets.CONFIG_YAML }}
       - name: Check stock
-        run: python stock_sentinel.py check
+        run: python stock_sentinel.py check --quiet
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 ```
 
-Конфиг и состояние проверок сохраняются в кэше между запусками.
+Config and check state are persisted in the cache between runs.
 
-## Требования
+### Public repositories: cache and logs
+
+- **Cache:** GitHub Actions cache is **not** visible to other users. Only workflow runs in this repository can read/write the cache; nobody can browse cached files. Your `config.yaml` and state stay private.
+- **Logs:** Workflow run **logs are visible** to anyone with read access. For a public repo, that means everyone can see step output (e.g. product names and URLs if the script prints them). **Secrets are masked** in logs (replaced with `***`). Avoid logging sensitive or personal data.
+
+## Requirements
 
 - Python 3.9+
 - requests, PyYAML
+
+## License
+
+GPL-3.0. See [LICENSE](LICENSE).

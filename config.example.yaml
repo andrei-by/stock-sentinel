@@ -1,4 +1,4 @@
-# StockSentinel - пример конфигурации
+# StockSentinel - example configuration
 
 products:
   - name: RTX4090
@@ -13,7 +13,7 @@ notifications:
     token: ${TELEGRAM_TOKEN}
     chat_id: ${TELEGRAM_CHAT_ID}
 
-# Опционально: настройки HTTP
+# Optional: HTTP settings
 http:
   user_agent: "StockSentinel/1.0 (https://github.com/your-repo/stock-sentinel)"
   timeout: 30
