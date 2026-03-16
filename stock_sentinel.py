@@ -397,7 +397,9 @@ def main() -> int:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("check", help="Run a one-off check of all products").set_defaults(func=cmd_check)
+    check_parser = subparsers.add_parser("check", help="Run a one-off check of all products")
+    check_parser.add_argument("-q", "--quiet", action="store_true", help="Only warnings and errors (e.g. for CI)")
+    check_parser.set_defaults(func=cmd_check)
     subparsers.add_parser("list", help="List products").set_defaults(func=cmd_list)
     subparsers.add_parser("test-notify", help="Send a test Telegram notification").set_defaults(func=cmd_test_notify)
 
@@ -412,7 +414,7 @@ def main() -> int:
     remove_parser.set_defaults(func=cmd_remove)
 
     args = parser.parse_args()
-    _setup_logging(verbose=args.verbose, quiet=args.quiet)
+    _setup_logging(verbose=args.verbose, quiet=getattr(args, "quiet", False))
 
     try:
         return args.func(args)
