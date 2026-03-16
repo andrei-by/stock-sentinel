@@ -1,0 +1,20 @@
+# StockSentinel - пример конфигурации
+
+products:
+  - name: RTX4090
+    url: https://example.com/rtx4090
+    enabled: true
+    check:
+      type: text_not_contains
+      value: "Out of stock"
+
+notifications:
+  telegram:
+    token: ${TELEGRAM_TOKEN}
+    chat_id: ${TELEGRAM_CHAT_ID}
+
+# Опционально: настройки HTTP
+http:
+  user_agent: "StockSentinel/1.0 (https://github.com/your-repo/stock-sentinel)"
+  timeout: 30
+  retries: 3
