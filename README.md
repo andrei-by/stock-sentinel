@@ -81,11 +81,18 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
+      - name: Cache state
+        uses: actions/cache@v4
+        with:
+          path: stock_sentinel_state.json
+          key: stock-sentinel-state
       - run: python stock_sentinel.py check
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 ```
+
+Состояние проверок (`stock_sentinel_state.json`) сохраняется между запусками через кэш GitHub Actions, поэтому уведомление о появлении товара придёт после смены статуса между двумя прогонами.
 
 ## Требования
 
