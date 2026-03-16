@@ -15,8 +15,7 @@ python stock_sentinel.py list
 
 ## Конфигурация
 
-1. Скопируйте `config.example.yaml` в `config.yaml`
-2. Добавьте товары и настройте Telegram:
+Локально: скопируйте `config.example.yaml` в `config.yaml` (файл в `.gitignore`). Добавьте товары и настройте Telegram:
 
 ```yaml
 products:
@@ -66,11 +65,21 @@ python stock_sentinel.py list
 
 ## GitHub Actions
 
+В репозитории нужны секреты (Settings → Secrets and variables → Actions):
+
+| Секрет | Описание |
+|--------|----------|
+| `TELEGRAM_TOKEN` | Токен бота Telegram |
+| `TELEGRAM_CHAT_ID` | ID чата для уведомлений |
+| `CONFIG_YAML` | Полное содержимое `config.yaml` (YAML одной строкой или с переносами) |
+
+При первом запуске workflow создаёт `config.yaml` из `CONFIG_YAML`; дальше конфиг и состояние хранятся в кэше Actions между запусками.
+
 ```yaml
 name: Stock Check
 on:
   schedule:
-    - cron: '0 */6 * * *'  # каждые 6 часов
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 jobs:
   check:
@@ -81,18 +90,28 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
-      - name: Cache state
+      - name: Restore cache (config + state)
         uses: actions/cache@v4
         with:
-          path: stock_sentinel_state.json
-          key: stock-sentinel-state
-      - run: python stock_sentinel.py check
+          path: |
+            config.yaml
+            stock_sentinel_state.json
+          key: stock-sentinel-data
+      - name: Prepare config
+        run: |
+          if [ ! -f config.yaml ]; then
+            echo "$CONFIG_YAML" > config.yaml
+          fi
+        env:
+          CONFIG_YAML: ${{ secrets.CONFIG_YAML }}
+      - name: Check stock
+        run: python stock_sentinel.py check
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 ```
 
-Состояние проверок (`stock_sentinel_state.json`) сохраняется между запусками через кэш GitHub Actions, поэтому уведомление о появлении товара придёт после смены статуса между двумя прогонами.
+Конфиг и состояние проверок сохраняются в кэше между запусками.
 
 ## Требования
 

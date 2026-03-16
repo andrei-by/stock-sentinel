@@ -12,11 +12,20 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - name: Cache state
+      - name: Restore cache (config + state)
         uses: actions/cache@v4
         with:
-          path: stock_sentinel_state.json
-          key: stock-sentinel-state
+          path: |
+            config.yaml
+            stock_sentinel_state.json
+          key: stock-sentinel-data
+      - name: Prepare config
+        run: |
+          if [ ! -f config.yaml ]; then
+            echo "$CONFIG_YAML" > config.yaml
+          fi
+        env:
+          CONFIG_YAML: ${{ secrets.CONFIG_YAML }}
       - name: Check stock
         run: python stock_sentinel.py check
         env:
